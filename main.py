@@ -7,6 +7,10 @@ import httpx
 
 app = Quart(__name__, static_folder='home/build/static', template_folder="home/build")
 
+@app.route("/favicon.ico")
+async def favicon_route():
+    return await send_from_directory(app.static_folder, "favicon.ico");
+
 @app.route("/data")
 async def data_route():
     async with httpx.AsyncClient() as client:
@@ -64,6 +68,38 @@ async def data_cases_route():
     print(ret_data)
 
     return jsonify(ret_data)
+
+
+@app.route("/data/total")
+async def data_total_route():
+    async with httpx.AsyncClient() as client:
+        data = await client.get("https://docs.google.com/spreadsheets/d/e/2PACX-1vQCHQh-DwbQf1-rAq_zk77I5-0LpBidpkuYW8LbP0JxYwFxMV6YHD4NNSTlclWIUE7tHNY9O-fSU-mb/pub?gid=0&single=true&output=csv")
+
+    split_data = csv.reader(data.text.split("\n"))
+
+    proc_data = defaultdict(int)
+
+    total = 0
+
+    for row in split_data:
+        total += 1
+    
+    ret_data = {
+        "total": total - 1
+    }
+
+    print(ret_data)
+
+    return jsonify(ret_data)
+
+@app.route("/manifest.json")
+async def manifest_serve():
+    return await send_from_directory(app.template_folder, "manifest.json")
+
+
+@app.route("/favicon.ico")
+async def favicon_serve():
+    return await send_from_directory(app.template_folder, "favicon.ico")
 
 # Serve React App
 @app.route("/")
